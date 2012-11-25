@@ -85,10 +85,28 @@ quit:					.asciiz "quit"
 					
 
 			get_case:
+					#Si la case est blanche on revoie 0, sinon on renvoie l'asresse de la case
+					#on retourne le resultat dans $2
 
 			move_pion:
 			
+			#argument $4 $5 (x,y)
 			couleur:
+					addi $sp $sp 4		#On augment la pile pour contenir l'adresse de retour de la fonction
+					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
+					jal get_case
+					li 
+					beq	$2 $0 couleurBlanc 
+					j couleurNoire
+					lw $31 0($sp)			#On restore le retour de la fonction
+					j $31
+			
+			couleurBlanc:
+					
+
+
+			couleurNoire:
+
 
 			occuper:
 
