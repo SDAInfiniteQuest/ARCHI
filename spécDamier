@@ -1,0 +1,35 @@
+spéc DAMIER étend PION
+	sorte damier
+
+Opérations:
+	damierNouv: -> damier // alloue un damier sans le remplir
+	initDamier: damier -> damier // initialise un damier
+	movePion: damier, case, case -> damier // bouger un pion
+
+	ligne: case -> nat // renvoie la ligne associée à une case
+	colonne: case -> nat // renvoie la colonne associée à une case
+	getCase: nat, nat -> case // renvoie une case à partir de ses
+																				coordonnées
+	occupable: damier, case -> Bool // renvoie 1 si la case est occupable 0	sinon
+	affichage: damier, (pr()) -> // affiche un damier
+
+Préconditions:
+	pré getCase(i,j)=0<i<=10 et 0<j<=10
+	pré ligne(c)=pré colonne(c)=c<50
+	
+Axiomes:
+	ligne(c)=c/5
+	colonne(c)=
+		si c%2==0 alors 2*(c%5)
+		sinon 2*(c%5)+1
+	getCase(i,j)=i*5+j
+	occupable(d,c)=
+		si getCase(ligne(c),colonne(c))==0 alors vrai
+		sinon faux
+	affichage(d,pr())=
+		pour tout c de 0 à 50 
+		faire
+			pr(getCase(d,c))
+		fin_pour
+		
+fin_spéc	
