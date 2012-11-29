@@ -105,14 +105,39 @@ quit:					.asciiz "quit"
 					jr $31						#on retourne dans le corps du programme
 			colonne2:
 					mult $11 $9			#on multiplie $11 par 2
+					mflo $11			#on met le resultat de la multiplication dans $11
 					lw $31 ($sp)			#on met l'adresse de retour dans $31
 					addu $sp $sp 4		#on désalloue l'espace sur la pile
-					mflo $11			#on met le resultat de la multiplication dans $11
 					jr $31						#on retourne dans le corps du programme
 
-			get_case:
-					#Si la case est blanche on revoie 0, sinon on renvoie l'asresse de la case
+					#Si la case est blanche on revoie -1, sinon on renvoie la	valeur qui se trouve à l'adresse de la case à l'adresse de la case
 					#on retourne le resultat dans $2
+					#fonction qui prend en argument un i (ligne) et un j (colonne)
+			get_case:
+					addu $sp $sp -4 	#on décrémente la pile pour mettre l'adresse de retour
+					sw $31 ($sp)			#on stocke l'adresse de retour
+					lw $8 4($sp)			#on charge l'adresse du premier agument de la	pile
+					lw $9 8($sp)			#on charge l'adresse du deuxième agument de la	pile
+					addu $10 $8 $9		#on additionne j ($8) et i($9)
+					li $11 2					#on charge 2 dans $11
+					div $10 $11				#on divise i+j par 2
+					mfhi $11					#on prend le reste
+					beq $11 $0 blanc 
+					li $10 5					#on met 5 dans $10
+					mult $10 $9				#on multiplie i par 5
+					mfhi $10					#on récupère le résultat dans $10
+					addu $10 $8 $10		#on additionne avec j
+					la $11 damier			#on charge l'adresse du damier dans le registre $11
+					add $11 $11 $10		#on ajoute à l'adresse le décalage pour avoir	l'adresse de la case
+					lb $2 ($11)				#on stocke la valeur de retour de la fonction	dans $2
+					lw $31 ($sp)			#on met l'adresse de retour dans $31
+					addu $sp $sp 4		#on désalloue l'espace sur la pile
+					jr $31						#on retourne dans le corps du programme
+			blanc:
+					li $2 -1
+					lw $31 ($sp)			#on met l'adresse de retour dans $31
+					addu $sp $sp 4		#on désalloue l'espace sur la pile
+					jr $31						#on retourne dans le corps du programme
 
 			move_pion:
 			
