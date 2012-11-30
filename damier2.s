@@ -10,10 +10,14 @@ caseLibre: 		.asciiz "La case est libre\n"
 caseOccupeN:	.asciiz "La case est occupe par un pion noir\n"
 caseOccupeB:	.asciiz "La case est occupe par un pion blanc\n"
 
+PionBlanc:		.asciiz	"[0]"
+PionNoir:			.asciiz	"[1]"
+Noir:					.asciiz	"[X]"
+Blanc:				.asciiz	"[ ]"
 #Chaine a compare a l'entree de l'utilisateur pour savoir quel commande effectue
 
 occup:				.asciiz "occuper"
-coul:			.asciiz	"couleur"
+coul:					.asciiz	"couleur"
 deplace:			.asciiz "deplacement"
 quit:					.asciiz "quit"
 
@@ -50,61 +54,44 @@ quit:					.asciiz "quit"
 			#fonction du jeu------------------------------------------------
 
 			#FONCTION init_damier: initialise un damier en mettant les pions blancs à la valeur 1, 0 quand la case est inoccupée et 2 quand il s'agit d'un pion noir
+
 			init_damier:
-					addi $sp $sp -4		#On augment la pile pour contenir l'adresse de retour de la fonction
+					addi $sp $sp 4		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
 					la $10 damier			#On charge l'adresse damier dans $10 
 					li $8 20					#Intervalle superieur pour la boucle forInit
 					li $9 0						#Intervalle inferieur pour la boucle forInit
 					li $11 1					#La valeur que va prendre les element du damier entreintervalle sup et inf 
-					jal forInit1				#la boucle qui va mettre les 20 premiere case avec des pionsnoir (1)
-			init1:
-					li $8 30					#Idem
+					jal forInit				#la boucle qui va mettre les 20 premiere case avec des pionsnoir (1)
+					li $8 31					#Idem
 					li $9 20 
 					li $11 0
-					jal forInit2				#La boucle qui va mettre les case entre entre les deux joueur a vide (0)
-			init2:
+					jal forInit				#La boucle qui va mettre les case entre entre les deux joueur a vide (0)
 					li $8 50					#Idem
-					li $9 30 
+					li $9 31 
 					li $11 2
-					jal forInit3				#La boucle qui va mettre les 20 derniere case avec des pions blanc (2)
-			init3:
+					jal forInit				#La boucle qui va mettre les 20 derniere case avec des pions blanc (2)
 					lw $31 0($sp)			#On restore le retour de la fonction
-					addi $sp $sp 4		#on désalloue l'espace sur la pile
+
 					jr $31							#On retourne dans le main
 
-			forInit1:
-					bne $8 $9	suivantInit1	#Tant que $8!=$9 on lance les operations
-					j init1
-			suivantInit1:
+			forInit:
+					bne $8 $9	suivantInit	#Tant que $8!=$9 on lance les operations
+					jr $31
+
+			suivantInit:
 					sb $11 0($10)			#On charge le byte contenant (0,1 ou 2) dans la bonne case du damier
 					addi $10 $10 1		#On prend l'adresse du byte suivant dans damier
-					addi $9 $9 1					#On incremente l'iterateur
-					j forInit1				#on boucle sur le test
-
-			forInit2:
-					bne $8 $9	suivantInit2	#Tant que $8!=$9 on lance les operations
-					j init2
-			suivantInit2:
-					sb $11 0($10)			#On charge le byte contenant (0,1 ou 2) dans la bonne case du damier
-					addi $10 $10 1		#On prend l'adresse du byte suivant dans damier
-					addi $9 $9 1					#On incremente l'iterateur
-					j forInit2				#on boucle sur le test
-
-			forInit3:
-					bne $8 $9	suivantInit3	#Tant que $8!=$9 on lance les operations
-					j init3			
-			suivantInit3:
-					sb $11 0($10)			#On charge le byte contenant (0,1 ou 2) dans la bonne case du damier
-					addi $10 $10 1		#On prend l'adresse du byte suivant dans damier
-					addi $9 $9 1					#On incremente l'iterateur
-					j forInit3				#on boucle sur le test
-
+					addi $9 1					#On incremente l'iterateur
+					j forInit					#on boucle sur le test
+			
 
 			#FONCTION ligne:
 			ligne:
-					addi $sp $sp -4		#On augment la pile pour contenir l'adresse de retour de la fonction
+					addi $sp $sp -12		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
+					sw $10 4($sp)
+					sw $11 8($sp)
 					li $10 5					#Valeur du diviseur
 					div $4 $10				#division de l'argument $4 avec 5 ($10) //ya quoi dans $4!!!!!!!!!!!!!!!!!!!!!!!
 					mflo $2						#On met le resultat de $4/$10 dans la valeur de retour
@@ -112,7 +99,9 @@ quit:					.asciiz "quit"
 					beq $11 $0 ligne2
 					addi $2 $2 1			#On a
 					lw $31 0($sp)			#On restore le retour de la fonction
-					addi $sp $sp 4		#on désalloue l'espace alloué sur le pile
+					lw $10 4($sp)
+					lw $11 8($sp)
+					addi $sp $sp 12		#on désalloue l'espace alloué sur le pile
 					jr $31
 
 			ligne2:
@@ -210,38 +199,81 @@ quit:					.asciiz "quit"
 			occuper:
 
 			affichage:
-					addi $sp $sp -4		#On augment la pile pour contenir l'adresse de retour de la fonction
+					addi $sp $sp -32	#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
+					sw $8 4($sp)
+					sw $9 8($sp)
+					sw $10 12($sp)
+					sw $11 16($sp)
+					sw $12 20($sp)
+					sw $13 24($sp)
+					sw $14 28($sp)
+					
 					la $10 damier			#On charge l'adresse damier dans $10 
-					li $8 50					#Intervalle superieur pour la boucle forAffi
+					li $8 0						#Intervalle superieur pour la boucle forAffi
 					li $9 0						#Intervalle inferieur pour la boucle forAffi
-					li $12 0					#Valeur d'une case vide
-					li $13 1					#Valeur d'un pion noir
-					li $14 2					#Valeur d'un pion blanc
-					li $15 5
+					li $15 9
+					li $12 -1					#Valeur d'une case vide
+					li $13 1					#Valeur d'un pion blanc
+					li $14 2					#Valeur d'un pion noir
 					jal forAffi
 					lw $31 0($sp)			#On restore le retour de la fonction
-					addi $sp $sp 4
+					lw $8 4($sp)
+					lw $9 8($sp)
+					lw $10 12($sp)
+					lw $11 16($sp)
+					lw $12 20($sp)
+					lw $13 24($sp)
+					lw $14 28($sp)
+					addi $sp $sp 32
 					jr $31							#On retourne dans le main
 			
 			forAffi:
-					#div $9 $
-					bne $8 $9	suivantAffi	#Tant que $8!=$9 on lance les operations
-					lw $31 0($sp)			#On restore le retour de la fonction
-					addi $sp $sp 4
+					bne $8 $15 parcColonne
 					jr $31
 			
-			suivantAffi:
-					lb $11 0($10)
-					addi $10 $10 1
-					beq $11 $12 affiVide 
-					beq	$11 $13 affiNoir
-					beq	$11 $14 affiBlanc
+			parcColonne:
+					bne $9 $15 suivantAffi
+					addi $8 $8 1
+					la $5 newline
+					jal afficher_string
 					j forAffi
 
-			affiVide:
-			affiNoir:
+			suivantAffi:
+					addiu $sp $sp -8
+					sw $8 0($sp)
+					sw $9 4($sp)
+					get_Case
+					lw $8 0($sp)
+					lw $9 4($sp)
+					addi $9 $9 1 
+					addiu $sp $sp 8
+					beq $2 $12 affiBlanc
+					lb $11 0($2)
+					beq	$2 $13 affiPionBlanc
+					beq	$2 $14 affiPionNoir
+					beq $2 $0 affiNoir
+					j forAffi
+
 			affiBlanc:
+				la $5 Blanc
+				jal afficher_string
+				j parcColonne
+
+			affiNoire:
+				la $5 Noir
+				jal afficher_string
+				j parcColonne
+
+			affiPionNoir:
+				la $5 PionNoir
+				jal afficher_string
+				j parcColonne
+
+			affiPionBlanc:
+				la $5	PionBlanc
+				jal afficher_string
+				j parcColonne
 
 			deplacement:
 			
@@ -260,10 +292,12 @@ quit:					.asciiz "quit"
 			afficher_string:
 					addi $sp $sp -8		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
-					lw $4 ($5)				#On prend l'adresse contenu dan $5 passe en argument 
+					sw $4 0($sp)
+					move $4 $5				#On prend l'adresse contenu dan $5 passe en argument 
 					li $2 4						#on met le bon numero d'appel system 
 					syscall						#On affiche la chaine dont l'adress est passe en argument
 					lw $31 0($sp)			#On restore le retour de la fonction
+					lw $4 0($sp)
 					addi $sp $sp 8		#On augment la pile pour contenir l'adresse de retour de la fonction
 					jr $31							#On retourne dans le main
 			
