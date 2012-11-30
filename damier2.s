@@ -28,7 +28,7 @@ quit:					.asciiz "quit"
 
 			#initialisation du damier
 			jal init_damier
-			li $8 7
+			li $8 6
 			li $9 5
 			addu $sp $sp -8		#allocation de l'espace nécessaire sur la pile pour les arguments de la fontciton getCase
 			sw $8 ($sp)			
@@ -43,7 +43,8 @@ quit:					.asciiz "quit"
 			jal ligne			#appel de la fonction ligne
 			lw $8 ($sp)
 			addu $sp $sp 4		#désallocation espace sur la pile
-				
+			
+			jal affichage
 			#Debut boucle saisie
 			#on sort de la boucle lorsque l'utilisateur rentre la commande "quit"
 
@@ -82,7 +83,7 @@ quit:					.asciiz "quit"
 			suivantInit:
 					sb $11 0($10)			#On charge le byte contenant (0,1 ou 2) dans la bonne case du damier
 					addi $10 $10 1		#On prend l'adresse du byte suivant dans damier
-					addi $9 1					#On incremente l'iterateur
+					addi $9 $9 1					#On incremente l'iterateur
 					j forInit					#on boucle sur le test
 			
 
@@ -153,7 +154,7 @@ quit:					.asciiz "quit"
 					addu $10 $8 $10		#on additionne avec j
 					la $11 damier			#on charge l'adresse du damier dans le registre $11
 					add $11 $11 $10		#on ajoute à l'adresse le décalage pour avoir	l'adresse de la case
-					lb $2 ($11)				#on stocke la valeur de retour de la fonction	dans $2
+					move $2 $11				#on stocke la valeur de retour de la fonction	dans $2
 					lw $31 ($sp)			#on met l'adresse de retour dans $31
 					addu $sp $sp 4		#on désalloue l'espace sur la pile
 					jr $31						#on retourne dans le corps du programme
@@ -212,7 +213,7 @@ quit:					.asciiz "quit"
 					la $10 damier			#On charge l'adresse damier dans $10 
 					li $8 0						#Intervalle superieur pour la boucle forAffi
 					li $9 0						#Intervalle inferieur pour la boucle forAffi
-					li $15 9
+					li $15 10
 					li $12 -1					#Valeur d'une case vide
 					li $13 1					#Valeur d'un pion blanc
 					li $14 2					#Valeur d'un pion noir
@@ -241,26 +242,26 @@ quit:					.asciiz "quit"
 
 			suivantAffi:
 					addiu $sp $sp -8
-					sw $8 0($sp)
-					sw $9 4($sp)
-					get_Case
-					lw $8 0($sp)
-					lw $9 4($sp)
+					sw $9 0($sp)
+					sw $8 4($sp)
+					jal get_case
+					lw $9 0($sp)
+					lw $8 4($sp)
 					addi $9 $9 1 
 					addiu $sp $sp 8
 					beq $2 $12 affiBlanc
 					lb $11 0($2)
-					beq	$2 $13 affiPionBlanc
-					beq	$2 $14 affiPionNoir
-					beq $2 $0 affiNoir
-					j forAffi
+					beq $11 $13 affiPionBlanc
+					beq $11 $14 affiPionNoir
+					beq $11 $0 affiNoir
+					
 
 			affiBlanc:
 				la $5 Blanc
 				jal afficher_string
 				j parcColonne
 
-			affiNoire:
+			affiNoir:
 				la $5 Noir
 				jal afficher_string
 				j parcColonne
@@ -275,7 +276,6 @@ quit:					.asciiz "quit"
 				jal afficher_string
 				j parcColonne
 
-			deplacement:
 			
 			#fonction du module de control-----------------------------------
 
@@ -292,16 +292,15 @@ quit:					.asciiz "quit"
 			afficher_string:
 					addi $sp $sp -8		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
-					sw $4 0($sp)
+					sw $4 4($sp)
 					move $4 $5				#On prend l'adresse contenu dan $5 passe en argument 
 					li $2 4						#on met le bon numero d'appel system 
 					syscall						#On affiche la chaine dont l'adress est passe en argument
 					lw $31 0($sp)			#On restore le retour de la fonction
-					lw $4 0($sp)
+					lw $4 4($sp)
 					addi $sp $sp 8		#On augment la pile pour contenir l'adresse de retour de la fonction
 					jr $31							#On retourne dans le main
 			
-			afficher_int:
 
 			saisie:
 		
