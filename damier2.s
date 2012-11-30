@@ -28,22 +28,11 @@ quit:					.asciiz "quit"
 
 			#initialisation du damier
 			jal init_damier
-			li $8 6
-			li $9 5
-			addu $sp $sp -8		#allocation de l'espace nécessaire sur la pile pour les arguments de la fontciton getCase
-			sw $8 ($sp)			
-			sw $9 4($sp)
+			li $4 6
+			li $5 5
 			jal couleur			#appel de la fonction couleur
-			lw $8 ($sp)
-			lw $9 4($sp)
-			addu $sp $sp 8		#désallocation espace sur la pile
-			li $8 32
-			addu $sp $sp -4		#allocation de l'espace nécessaire sur la pile pour les arguments de la fontciton getCase
-			sw $8 ($sp)			
-			jal ligne			#appel de la fonction ligne
-			lw $8 ($sp)
-			addu $sp $sp 4		#désallocation espace sur la pile
-			
+			li $4 37
+			jal colonne			#appel de la fonction ligne
 			jal affichage
 			#Debut boucle saisie
 			#on sort de la boucle lorsque l'utilisateur rentre la commande "quit"
@@ -94,11 +83,10 @@ quit:					.asciiz "quit"
 					sw $10 4($sp)
 					sw $11 8($sp)
 					li $10 5					#Valeur du diviseur
-					div $4 $10				#division de l'argument $4 avec 5 ($10) //ya quoi dans $4!!!!!!!!!!!!!!!!!!!!!!!
+					div $4 $10				#division de l'argument $4 avec 5 ($10)
 					mflo $2						#On met le resultat de $4/$10 dans la valeur de retour
 					mfhi $11					#On met le resultat de $4 mod $10 dans $11
 					beq $11 $0 ligne2
-					addi $2 $2 1			#On a
 					lw $31 0($sp)			#On restore le retour de la fonction
 					lw $10 4($sp)
 					lw $11 8($sp)
@@ -141,8 +129,8 @@ quit:					.asciiz "quit"
 			get_case:
 					addu $sp $sp -4 	#on décrémente la pile pour mettre l'adresse de retour
 					sw $31 ($sp)			#on stocke l'adresse de retour
-					lw $8 4($sp)			#on charge l'adresse du premier agument de la	pile
-					lw $9 8($sp)			#on charge l'adresse du deuxième agument de la	pile
+					la $8 ($5)			#on charge l'adresse du premier agument de la	pile
+					la $9 ($4)			#on charge l'adresse du deuxième agument de la	pile
 					addu $10 $8 $9		#on additionne j ($8) et i($9)
 					li $11 2					#on charge 2 dans $11
 					div $10 $11				#on divise i+j par 2
