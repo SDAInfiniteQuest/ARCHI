@@ -24,7 +24,16 @@ quit:					.asciiz "quit"
 
 			#initialisation du damier
 			jal init_damier
-
+			li $8 4
+			li $9 3
+			addu $sp $sp -8		#allocation de l'espace nécessaire sur la pile pour les arguments de la fontciton getCase
+			sw $8 ($sp)			
+			sw $9 4($sp)
+			jal get_case
+			lw $8 ($sp)
+			lw $9 4($sp)
+			addu $sp $sp 8
+				
 			#Debut boucle saisie
 			#on sort de la boucle lorsque l'utilisateur rentre la commande "quit"
 
@@ -34,6 +43,7 @@ quit:					.asciiz "quit"
 
 			#fonction du jeu------------------------------------------------
 
+			#FONCTION init_damier: initialise un damier en mettant les pions blancs à la valeur 1, 0 quand la case est inoccupée et 2 quand il s'agit d'un pion noir
 			init_damier:
 					addi $sp $sp -4		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
@@ -41,32 +51,51 @@ quit:					.asciiz "quit"
 					li $8 20					#Intervalle superieur pour la boucle forInit
 					li $9 0						#Intervalle inferieur pour la boucle forInit
 					li $11 1					#La valeur que va prendre les element du damier entreintervalle sup et inf 
-					jal forInit				#la boucle qui va mettre les 20 premiere case avec des pionsnoir (1)
-					li $8 31					#Idem
+					jal forInit1				#la boucle qui va mettre les 20 premiere case avec des pionsnoir (1)
+			init1:
+					li $8 30					#Idem
 					li $9 20 
 					li $11 0
-					jal forInit				#La boucle qui va mettre les case entre entre les deux joueur a vide (0)
+					jal forInit2				#La boucle qui va mettre les case entre entre les deux joueur a vide (0)
+			init2:
 					li $8 50					#Idem
-					li $9 31 
+					li $9 30 
 					li $11 2
-					jal forInit				#La boucle qui va mettre les 20 derniere case avec des pions blanc (2)
+					jal forInit3				#La boucle qui va mettre les 20 derniere case avec des pions blanc (2)
+			init3:
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp 4		#on désalloue l'espace sur la pile
 					jr $31							#On retourne dans le main
 
-			forInit:
-					bne $8 $9	suivantInit	#Tant que $8!=$9 on lance les operations
-					lw $31 0($sp)			#On restore le retour de la fonction
-					addi $sp $sp 4		#on désalloue l'espace sur la pile
-					jr $31
-
-			suivantInit:
+			forInit1:
+					bne $8 $9	suivantInit1	#Tant que $8!=$9 on lance les operations
+					j init1
+			suivantInit1:
 					sb $11 0($10)			#On charge le byte contenant (0,1 ou 2) dans la bonne case du damier
 					addi $10 $10 1		#On prend l'adresse du byte suivant dans damier
 					addi $9 $9 1					#On incremente l'iterateur
-					j forInit					#on boucle sur le test
-			
-			
+					j forInit1				#on boucle sur le test
+
+			forInit2:
+					bne $8 $9	suivantInit2	#Tant que $8!=$9 on lance les operations
+					j init2
+			suivantInit2:
+					sb $11 0($10)			#On charge le byte contenant (0,1 ou 2) dans la bonne case du damier
+					addi $10 $10 1		#On prend l'adresse du byte suivant dans damier
+					addi $9 $9 1					#On incremente l'iterateur
+					j forInit2				#on boucle sur le test
+
+			forInit3:
+					bne $8 $9	suivantInit3	#Tant que $8!=$9 on lance les operations
+					j init3			
+			suivantInit3:
+					sb $11 0($10)			#On charge le byte contenant (0,1 ou 2) dans la bonne case du damier
+					addi $10 $10 1		#On prend l'adresse du byte suivant dans damier
+					addi $9 $9 1					#On incremente l'iterateur
+					j forInit3				#on boucle sur le test
+
+
+			#FONCTION ligne:
 			ligne:
 					addi $sp $sp -4		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
