@@ -64,8 +64,8 @@ quit:					.asciiz "quit"
 					li $9 0						#Intervalle inferieur pour la boucle forInit
 					li $11 1					#La valeur que va prendre les element du damier entreintervalle sup et inf 
 					jal forInit				#la boucle qui va mettre les 20 premiere case avec des pionsnoir (1)
-					li $8 31					#Idem
-					li $9 20 
+					li $8 30					#Idem
+					li $9 21
 					li $11 0
 					jal forInit				#La boucle qui va mettre les case entre entre les deux joueur a vide (0)
 					li $8 50					#Idem
@@ -235,6 +235,7 @@ quit:					.asciiz "quit"
 			
 			parcColonne:
 					bne $9 $15 suivantAffi
+					li $9 0
 					addi $8 $8 1
 					la $5 newline
 					jal afficher_string
