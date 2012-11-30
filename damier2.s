@@ -158,13 +158,8 @@ quit:					.asciiz "quit"
 			couleur:
 					addi $sp $sp -4		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
-					lw $8 4($sp)			#on récupere les arguments sur la pile
-					lw $9 8($sp)
 					addi $sp $sp -8		#on alloue l'espace necessaire pour placer les arguments sur la pile
-					sw $8 0($sp)			#on met les arguments sur la pile
-					sw $9 4($sp)
 					jal get_case			#Appel à la fonction get_case
-					addi $sp $sp 8 		#on libère l'espace sur la pile
 					la $8 ($2)			#On met le résultat de la fonction dans $8
 					blt $8 $0 couleurBlanc 	#branchement si $2 < 0
 					j couleurNoire
