@@ -24,15 +24,21 @@ quit:					.asciiz "quit"
 
 			#initialisation du damier
 			jal init_damier
-			li $8 4
-			li $9 3
+			li $8 7
+			li $9 5
 			addu $sp $sp -8		#allocation de l'espace nécessaire sur la pile pour les arguments de la fontciton getCase
 			sw $8 ($sp)			
 			sw $9 4($sp)
-			jal get_case
+			jal couleur			#appel de la fonction couleur
 			lw $8 ($sp)
 			lw $9 4($sp)
-			addu $sp $sp 8
+			addu $sp $sp 8		#désallocation espace sur la pile
+			li $8 32
+			addu $sp $sp -4		#allocation de l'espace nécessaire sur la pile pour les arguments de la fontciton getCase
+			sw $8 ($sp)			
+			jal ligne			#appel de la fonction ligne
+			lw $8 ($sp)
+			addu $sp $sp 4		#désallocation espace sur la pile
 				
 			#Debut boucle saisie
 			#on sort de la boucle lorsque l'utilisateur rentre la commande "quit"
@@ -154,7 +160,7 @@ quit:					.asciiz "quit"
 					beq $11 $0 blanc 
 					li $10 5					#on met 5 dans $10
 					mult $10 $9				#on multiplie i par 5
-					mfhi $10					#on récupère le résultat dans $10
+					mflo $10					#on récupère le résultat dans $10
 					addu $10 $8 $10		#on additionne avec j
 					la $11 damier			#on charge l'adresse du damier dans le registre $11
 					add $11 $11 $10		#on ajoute à l'adresse le décalage pour avoir	l'adresse de la case
@@ -174,20 +180,32 @@ quit:					.asciiz "quit"
 			couleur:
 					addi $sp $sp -4		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
-					jal get_case
-					#li 
-					beq	$2 $0 couleurBlanc 
+					lw $8 4($sp)			#on récupere les arguments sur la pile
+					lw $9 8($sp)
+					addi $sp $sp -8		#on alloue l'espace necessaire pour placer les arguments sur la pile
+					sw $8 0($sp)			#on met les arguments sur la pile
+					sw $9 4($sp)
+					jal get_case			#Appel à la fonction get_case
+					addi $sp $sp 8 		#on libère l'espace sur la pile
+					la $8 ($2)			#On met le résultat de la fonction dans $8
+					blt $8 $0 couleurBlanc 	#branchement si $2 < 0
 					j couleurNoire
+
+			couleurBlanc:	
+					li $2 4				#préparation à l'affichage de la réponse 
+					la $4 caseBlanche
+					syscall 			#appel systeme
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
-			
-			couleurBlanc:
-					
-
 
 			couleurNoire:
-
+					li $2 4				#préparation à l'affichage de la réponse 
+					la $4 caseNoire
+					syscall 			#appel systeme
+					lw $31 0($sp)			#On restore le retour de la fonction
+					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
+					jr $31
 
 			occuper:
 
