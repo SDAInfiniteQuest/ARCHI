@@ -209,31 +209,131 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 			move_pion_possible:
 					addi $sp $sp -4		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)		#On met l'adresse de retour de la fonction dans la pile
-					la $8 ($4)			#on met les arguments dans les registre 8 à 11
-					la $9 ($5)	
-					la $10 ($6)	
-					la $11 ($7)	
-					la $12 damier			#on stocke l'adresse de damier dans $12
-					jal get_case			#appel à get_case
-					la $13 ($2) 			#récupérer l'adresse de la case
-					la $4 ($10)			#on met les arguments de la fonction get_case dans $4 $5
-					la $5 ($11)	
-					jal get_case			#nouvel appel à get_case
-					la $14 ($2) 			#récupérer l'adresse de la case
+
+					lw $8 4($sp)			# $8 ← i
+					lw $9 8($sp)			# $9 ← j
+					lw $10 12($sp)		# $10 ← x
+					lw $12 16($sp)		# $11 ← y
+
+					addu $sp $sp -8		#appel get_case avec i j
+					sw $8 0($sp)
+					sw $9 4($sp)
+					jal get_case
+					lw $8 0($sp)
+					lw $9 4($sp)
+					addu $sp $sp 8
+					la $13 ($2)			# $13 ← get_case(i,j)
+
+					addu $sp $sp -8		#appel get_case avec x y
+					sw $10 0($sp)
+					sw $11 4($sp)
+					jal get_case
+					lw $10 0($sp)
+					lw $11 4($sp)
+					addu $sp $sp 8
+					la $14 ($2)			# $14 ← get_case(x,y)
+
+					lb $15 ($13)			#on charge la valeur contenue dans la case départ
+					lb $16 ($14)			#on charge la valeur contenue dans la case arrivée
+
+					#CONDITION DE POURSUITE
 					blt $13 $0 fin			#on saute à la fin de la fonction si la case est blanche
 					blt $14 $0 fin			#on saute à la fin de la fonction si la case est blanche	
-					lb $15 ($13)			#on charge la valeur contenue dans la case départ
 					beq $15 $0 fin		#on saute à la finh de la fonction si la case est inoccupée				
-					li $16 1			#on charge 1 dans  $16
-					beq $15 $16 cas_pion_blanc # on détermine la couleur du pion
+
+					li $21 1			#on charge 1 dans  $21
+					li $22 2			#on charge 2 dans  $22
+
+					beq $15 $21 cas_pion_blanc # on détermine la couleur du pion
 					j cas_pion_noir
 
 			cas_pion_blanc:
-					bge $8 $9 fin			#on saute à la fin de la fonction si la case de départ est plus avancée que la case d'arrivée
-					
-			cas_pion_noir:
-					bge $9 $8 fin		#on saute à la fin de la fonction si la case de départ est plus avancée que la case d'arrivée
+					j cas_gauche_blanc
+			
+			cas_gauche_blanc:
+					addi $17 $8 1			# $17 ← i+1
+					addi $18 $9 -1		# $17 ← j-1
 
+					addu $sp $sp -8		# appel get_case avec i+1 j-1
+					sw $17 0($sp)
+					sw $18 4($sp)
+					jal get_case
+					lw $17 0($sp)
+					lw $18 4($sp)
+					addu $sp $sp 8
+					lb $17 ($2)			# on charge la valeur à l'adresse get_case(i+1,j-1)
+
+					beq $17 $21 cas_droite_blanc
+					beq $17 $22 prendre_gauche_blanc
+
+					lw $31 0($sp)			#On restore le retour de la fonction
+					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
+					jr $31
+
+			prendre_gauche_blanc:
+
+			cas_droite_blanc:
+					addi $17 $8 1			# $17 ← i+1
+					addi $18 $9 1			# $17 ← j+1
+
+					addu $sp $sp -8		# appel get_case avec i+1 j+1
+					sw $17 0($sp)
+					sw $18 4($sp)
+					jal get_case
+					lw $17 0($sp)
+					lw $18 4($sp)
+					addu $sp $sp 8
+					lb $17 ($2)			# on charge la valeur à l'adresse get_case(i+1,j+1)
+
+					beq $17 $21 fin		# le pion est bloqué aucun mouvement n'est possible
+					beq $17 $22 prendre_droite_blanc
+
+					lw $31 0($sp)			#On restore le retour de la fonction
+					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
+					jr $31
+
+			prendre_droite_blanc:
+
+			cas_pion_noir:
+					j cas_gauche_noir
+
+			cas_gauche_noir:
+					addi $17 $8 -1		# $17 ← i-1
+					addi $18 $9 -1		# $17 ← j-1
+
+					addu $sp $sp -8		# appel get_case avec i+1 j-1
+					sw $17 0($sp)
+					sw $18 4($sp)
+					jal get_case
+					lw $17 0($sp)
+					lw $18 4($sp)
+					addu $sp $sp 8
+					lb $17 ($2)			# on charge la valeur à l'adresse get_case(i+1,j-1)
+
+					beq $17 $22 cas_droite_noir
+
+					lw $31 0($sp)			#On restore le retour de la fonction
+					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
+					jr $31
+
+			cas_droite_noir:
+					addi $17 $8 1			# $17 ← i-1
+					addi $18 $9 1			# $17 ← j+1
+
+					addu $sp $sp -8		# appel get_case avec i-1 j+1
+					sw $17 0($sp)
+					sw $18 4($sp)
+					jal get_case
+					lw $17 0($sp)
+					lw $18 4($sp)
+					addu $sp $sp 8
+					lb $17 ($2)			# on charge la valeur à l'adresse get_case(i-1,j+1)
+
+					beq $17 $22 fin		# le pion est bloqué aucun mouvement n'est possible
+
+					lw $31 0($sp)			#On restore le retour de la fonction
+					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
+					jr $31
 			fin:
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
