@@ -25,9 +25,11 @@ lectureString:
 	lw $31 0($sp)
 	jr $31
 
-#argument $4 : l'adresse de la cahine a teste 
+#argument $4 : l'adresse de la chaine a teste 
 #retour $2 : le nombre de caractere dans la chaine 
 	strlen:
+		lw $4 4($sp)
+
 		addi $29 ,$29 ,-16#on augmente la taille de la pile 
 		sw $31,0($29)			#On met l'adresse de retour de la fonction dans la pile	
 		sw $15,4($29)			#sauvegarde des registre que la fonction va utiliser
@@ -36,7 +38,13 @@ lectureString:
 		li $15,10					#code ascii correspondant au \n
 		li $18,0					#nombre d'element de la chaine
 		lb $10 0($4)			#on charge les lettres une a une dans $10
+		
+		addiu $sp $sp -4
+		sw $31 0($sp)		
 		jal whileStrlen
+		lw $31 0($sp)
+		addiu $sp $sp 4
+		
 		addi $18 $18 -1		#on enleve le compte du \n de la chaine saisie par 
 		move $2 $18				#on renvoie le resultat dans le registre $2
 		
@@ -61,25 +69,41 @@ lectureString:
 #argument #4 et #5 les deux chaine a tester
 #renvoie 1 si vrai ,sinon 0 dans $2
 	compareString:
-		addi $29 ,$29 ,-16#on augmente la taille de la pile 
+		lw $4 4($sp)
+		lw $5 8($sp)		
+
+		addi $29 ,$29 ,-20#on augmente la taille de la pile 
 		sw $31,0($29)			#On met l'adresse de retour de la fonction dans la pile	
 		sw $10,4($29)			#sauvegarde des registre que la fonction va utiliser
 		sw $11,8($29)			#idem
 		sw $15,12($29)		#idem
+		sw $20,12($29)		#idem
 		li $10 0					#on mettre les caractere de la chaine dont l'adresse est dans $4 dans ce registre pour le test			
 		li $11 0					#on mettre les caractere de la chaine dont l'adresse est dans $5 dans ce registre pour le test
-		li $15 0					#Incrementeur: nombre de tour de boucle (lettre egale une a une )
-		addi $29 ,$29 ,-4
+		li $15 0					#Incrementeur: nombre de tour de boucle (lettre egale une a une ) 		
+
+		addi $29 ,$29 ,-8
+		sw $31 0($sp)		
 		sw $4,4($29)
 		jal Strlen				#taille de $4
 		lw $4,4($29)
+		lw $31 0($sp)
+		addi $29 ,$29 ,8
+
 		move $2 $20				#on met le resultat de Strlen dans $20
+
+		addi $29 ,$29 ,-4
+		sw $31 0($sp)
 		jal whileCompareString 
+		sw $31 0($sp)
+		addi $29 ,$29 ,4
+
 		lw $31,0($29)			#on restaure la valeur de retour de la fonction	
 		lw $15,4($29)			#on restaure les registre du contexte de al fonction appellante
 		lw $18,8($29)			#idem	
 		lw $10,12($29)		#idem				
-		addi $29,$29,16
+		addi $29,$29,20
+		
 		jr $31
 
 	whileCompareString:
@@ -104,22 +128,82 @@ lectureString:
 		jr $31
 
 	user_affichage_choix:
+		addiu $sp $sp -4 
+		sw $31 0($sp)
+	
 		la $5 choix
-		jal afficher_string
-		la $5 choix1
-		jal afficher_string
-		la $5 choix2
-		jal afficher_string
-		la $5 choix3
-		jal afficher_string
-		la $5 choix4
 		
+		addiu $sp $sp -8
+		sw $31 0($sp)		
+		sw $5  4($sp) 
+		jal afficher_string
+		sw $31 0($sp)		
+		sw $5  4($sp)
+		addiu $sp $sp 8
+		
+		la $5 choix1
+
+		addiu $sp $sp -8
+		sw $31 0($sp)		
+		sw $5  4($sp)
+		jal afficher_string
+		lw $31 0($sp)		
+		lw $5  4($sp)
+		addiu $sp $sp 8
+
+		la $5 choix2
+
+		addiu $sp $sp -8
+		sw $31 0($sp)		
+		sw $5  4($sp)
+		jal afficher_string
+		lw $31 0($sp)		
+		lw $5  4($sp)
+		addiu $sp $sp 8
+		
+		la $5 choix3
+
+		addiu $sp $sp -8
+		sw $31 0($sp)		
+		sw $5  4($sp)
+		jal afficher_string
+		lw $31 0($sp)		
+		lw $5  4($sp)
+		addiu $sp $sp 8
+
+		la $5 choix4
+
+		addiu $sp $sp -8
+		sw $31 0($sp)		
+		sw $5  4($sp)
+		jal afficher_string
+		lw $31 0($sp)		
+		lw $5  4($sp)
+		addiu $sp $sp 8
+
+		addiu $sp $sp -4
+		sw $31 0($sp)		
 		jal lectureString
+		lw $31 0($sp)	
+		addiu $sp $sp 4
 		move $2 $4
+		
+		addiu $sp $sp -8
+		sw $31 0($sp)		
+		sw $4  4($sp)
 		jal user_commande
+		lw $31 0($sp)		
+		lw $5  4($sp)
+		addiu $sp $sp 8
+
+		lw $31 0($sp)
+		addiu $sp $sp 4 
+
 		
 #argument dans $4 , l'entre de l'utilisateur
 	user_commande:
+		lw $4 4($sp)
+ 		
 		addi $29 ,$29 ,-24#on augmente la taille de la pile 
 		sw $31,0($29)			#sauvegarde des registre que la fonction va utiliser
 		sw $13,4($29)			#idem
@@ -134,27 +218,50 @@ lectureString:
 		li $17,1					#on mettre les caractere de la chaine occup dans ce registre pour le test
 						
 
-		addi $29 ,$29 ,-4	#on augmente la taille de la pile 
-		sw $4 0($29)			#on sauvegarde l'argument passe a la fonction compareString
-		move $13 $5				#on place l'autre chaine a compare dans $5, l'autre argument decompareString,ici l'etiquette occup
+		addi $29 ,$29 ,-12	#on augmente la taille de la pile 
+		sw $31 0($29)			#on sauvegarde l'argument passe a la fonction compareString
+		sw $4 4($sp)
+		sw $13 8($sp)
 		jal compareString	#la comparaison est appeller avec $4 la chaine passer en argument a user_commande
-		lw $4 0($29)			#on restaure le $4 initiale
+		lw $31 0($29)			#on restaure le $4 initiale
+		lw $4 4($29)			#on restaure le $4 initiale
+		lw $13 8($29)			#on restaure le $4 initiale
+		addi $29 ,$29 ,12
 		beq $2 $17 user_occuper	#Si la comparaison est vrai alors on executer la fonction user_occuper
 
-		move $14 $5				#on place l'autre chaine a compare dans $5, l'autre argument decompareString,ici l'etiquette couleur
+		addi $29 ,$29 ,-12	#on augmente la taille de la pile 
+		sw $31 0($29)			#on sauvegarde l'argument passe a la fonction compareString
+		sw $4 4($sp)
+		sw $14 8($sp)
 		jal compareString	#la comparaison est appeller avec $4 la chaine passer en argument a user_commande
-		lw $4 0($29)			#on restaure le $4 initiale
+		lw $31 0($29)			#on restaure le $4 initiale
+		lw $4 4($29)			#on restaure le $4 initiale
+		lw $14 8($29)			#on restaure le $4 initiale
+		addi $29 ,$29 ,12
 		beq $2 $17 user_couleur	#Si la comparaison est vrai alors on executer la fonction user_occuper
 
-		move $15 $5				#on place l'autre chaine a compare dans $5, l'autre argumentdecompareString,ici l'etiquette deplace
+		addi $29 ,$29 ,-12	#on augmente la taille de la pile 
+		sw $31 0($29)			#on sauvegarde l'argument passe a la fonction compareString
+		sw $4 4($sp)
+		sw $15 8($sp)
 		jal compareString	#la comparaison est appeller avec $4 la chaine passer en argument a user_commande
-		lw $4 0($29)			#on restaure le $4 initiale
-		beq $2 $17 user_deplacement	#Si la comparaison est vrai alors on executer la fonction user_occuper
+		lw $31 0($29)			#on restaure le $4 initiale
+		lw $4 4($29)			#on restaure le $4 initiale
+		lw $15 8($29)			#on restaure le $4 initiale
+		addi $29 ,$29 ,12
+		beq $2 $17 user_deplace	#Si la comparaison est vrai alors on executer la fonction user_occuper
 		
-		move $16 $5				#on place l'autre chaine a compare dans $5, l'autre argumentdecompareString,ici l'etiquette quit
+		addi $29 ,$29 ,-12	#on augmente la taille de la pile 
+		sw $31 0($29)			#on sauvegarde l'argument passe a la fonction compareString
+		sw $4 4($sp)
+		sw $16 8($sp)
 		jal compareString	#la comparaison est appeller avec $4 la chaine passer en argument a user_commande
-		lw $4 0($29)			#on restaure le $4 initiale
+		lw $31 0($29)			#on restaure le $4 initiale
+		lw $4 4($29)			#on restaure le $4 initiale
+		lw $16 8($29)			#on restaure le $4 initiale
+		addi $29 ,$29 ,12
 		beq $2 $17 user_quit	#Si la comparaison est vrai alors on executer la fonction user_occuper
+
 		
 		lw $31,0($29)			#on restaure les registre du contexte de al fonction appellante
 		sw $13,4($29)			#idem	
