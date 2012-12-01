@@ -56,7 +56,18 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 			sw $31 ($sp)			
 			lw $8 4($sp)
 			addu $sp $sp 8
-			
+
+			li $8 22
+			addu $sp $sp -4
+			sw $8 ($sp) 
+			jal colonne
+			lw $8 ($sp)
+			addu $sp $sp 4
+
+			la $4 ($2)
+			li $2 1
+			syscall
+
 			move $4 $2
 			li $2 1
 			syscall
@@ -135,19 +146,19 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 			colonne:
 					addu $sp $sp -4 	#on décrémente la pile pour mettre l'adresse de retour
 					sw $31 ($sp)			#on stocke l'adresse de retour
-					lw $10 4($sp)
-					li $8 5
-					li $9 10
-					div $10 $9		
-					mfhi $12
-					li $11 2
-					blt $8 $12 colonne2		
-					mul $2 $12 $11
+					lw $10 4($sp)			#on met l'argument dans $10
+					li $8 5				# $8←5
+					li $9 10			# $9←10
+					div $10 $9			
+					mfhi $12			# $12←arg%10
+					li $11 2			# $11←2
+					ble $8 $12 colonne2		# si 5<arg%10 on branche sur colonne2
+					mul $2 $12 $11		
 					addi $2 $2 1					
 					addu $sp $sp 4		#on désalloue l'espace sur la pile
 					jr $31						#on retourne dans le corps du programme
 			colonne2:
-					addu $12 $12 -5
+					addu $12 $12 -5		# $12←arg%10-5
 					mul $2 $12 $11
 					lw $31 ($sp)			#on met l'adresse de retour dans $31
 					addu $sp $sp 4		#on désalloue l'espace sur la pile
