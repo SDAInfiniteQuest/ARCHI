@@ -37,7 +37,7 @@ quit:					.asciiz "quit"
 			lw $9 4($sp)
 			lw $8 8($sp)
 			addi $sp $sp 8
-			li $8 37
+			li $8 30
 			addu $sp $sp -4
 			sw $8 ($sp)
 			jal colonne			#appel de la fonction ligne
@@ -112,25 +112,20 @@ quit:					.asciiz "quit"
 			colonne:
 					addu $sp $sp -4 	#on décrémente la pile pour mettre l'adresse de retour
 					sw $31 ($sp)			#on stocke l'adresse de retour
-					lw $8 4($sp)
-					li $10 5					#Valeur du diviseur
-					div $8 $10				#division de l'argument $4 avec 5 ($10)
-					mflo $2						#On met le resultat de $4/$10 dans la valeur de retour
-					mfhi $11					#On met le resultat de $4 mod $10 dans $11
-					li $9 2						#On met 2 dans $9
-					div $11 $9					#on divide le reste de la division par 5 ensuite par deux
-					mflo $2						#on met le quotient dans $2
-					mfhi $12					#on met le reste dans $12
-					beq $12 $0 colonne2		#si $12=0 on va fait ce qui suit sinon on se branche sur colonne 2
-					mult $11 $9			#on multiplie $11 par 2
-					mflo $11			#on met le résultat de la multiplication dans $11
-					addu $11 $11 1		#on y ajoute 1
-					lw $31 ($sp)			#on met l'adresse de retour dans $31
-					addu $sp $sp 4		#on désallout l'espace sur la pile
+					lw $10 4($sp)
+					li $8 5
+					li $9 10
+					div $10 $9		
+					mfhi $12
+					li $11 2
+					blt $8 $12 colonne2		
+					mul $2 $12 $11
+					addi $2 $2 1					
+					addu $sp $sp 4		#on désalloue l'espace sur la pile
 					jr $31						#on retourne dans le corps du programme
 			colonne2:
-					mult $11 $9			#on multiplie $11 par 2
-					mflo $11			#on met le resultat de la multiplication dans $11
+					addu $12 $12 -5
+					mul $2 $12 $11
 					lw $31 ($sp)			#on met l'adresse de retour dans $31
 					addu $sp $sp 4		#on désalloue l'espace sur la pile
 					jr $31						#on retourne dans le corps du programme
