@@ -28,22 +28,34 @@ quit:					.asciiz "quit"
 
 			#initialisation du damier
 			jal init_damier
-			li $8 6
-			li $9 5
-			addi $sp $sp -8 		#allocation de l'espace sur la pile pour les arguments
-			sw $9 0($sp)
-			sw $8 4($sp)
-			jal get_case			#appel de la fonction couleur
+			
+			li $8 0
+			li $9 1
+			addi $sp $sp -12 		#allocation de l'espace sur la pile pour les arguments
+			sw $31 0($sp)
+			sw $9 4($sp)
+			sw $8 8($sp)
+			jal couleur			#appel de la fonction couleur
+			lw $31 0($sp)
 			lw $9 4($sp)
 			lw $8 8($sp)
-			addi $sp $sp 8
-			li $8 30
-			addu $sp $sp -4
-			sw $8 ($sp)
-			jal colonne			#appel de la fonction ligne
-			lw $8 ($sp)
-			addu $sp $sp 4
-			jal affichage
+			addi $sp $sp 12
+			
+			li $8 8
+			addu $sp $sp -8
+			sw $31 ($sp)
+			sw $8 4($sp)
+			jal ligne 		#appel de la fonction ligne
+			sw $31 ($sp)			
+			lw $8 4($sp)
+			addu $sp $sp 8
+			
+			move $4 $2
+			li $2 1
+			syscall
+			
+			#jal affichage
+			
 			#Debut boucle saisie
 			#on sort de la boucle lorsque l'utilisateur rentre la commande "quit"
 
@@ -88,6 +100,9 @@ quit:					.asciiz "quit"
 
 			#FONCTION ligne:
 			ligne:
+					lw $4 4($sp)			#On charge les argument depuis la pile
+
+
 					addi $sp $sp -12		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
 					sw $10 4($sp)
@@ -101,6 +116,7 @@ quit:					.asciiz "quit"
 					lw $10 4($sp)
 					lw $11 8($sp)
 					addi $sp $sp 12		#on désalloue l'espace alloué sur le pile
+					addi $2 $2 1
 					jr $31
 
 			ligne2:
@@ -133,11 +149,15 @@ quit:					.asciiz "quit"
 					#Si la case est blanche on revoie -1, sinon on renvoie la	valeur qui se trouve à l'adresse de la case à l'adresse de la case
 					#on retourne le resultat dans $2
 					#fonction qui prend en argument un i (ligne) et un j (colonne)
-			get_case:
-					addu $sp $sp -4 	#on décrémente la pile pour mettre l'adresse de retour
-					sw $31 ($sp)			#on stocke l'adresse de retour
+			get_case:	
 					lw $9 4($sp)			#on charge l'adresse du premier agument de la	pile
 					lw $8 8($sp)			#on charge l'adresse du deuxième agument de la	pile
+					addu $sp $sp -20 	#on décrémente la pile pour mettre l'adresse de retour,et le contexte de la fonction appellante
+					sw $31 ($sp)			#on stocke l'adresse de retour
+					sw $9 4($sp)
+					sw $8 8($sp)
+					sw $10 12($sp)		#On sauvegarde les registre que l'on va utiliser
+					sw $11 16($sp)		#idem
 					addu $10 $8 $9		#on additionne j ($8) et i($9)
 					li $11 2					#on charge 2 dans $11
 					div $10 $11				#on divise i+j par 2
@@ -150,12 +170,20 @@ quit:					.asciiz "quit"
 					add $11 $11 $10		#on ajoute à l'adresse le décalage pour avoir	l'adresse de la case
 					move $2 $11				#on stocke la valeur de retour de la fonction	dans $2
 					lw $31 ($sp)			#on met l'adresse de retour dans $31
-					addu $sp $sp 4		#on désalloue l'espace sur la pile
+					lw $9 4($sp)			# On restaure les registre utiliser
+					lw $8 8($sp)			#idem
+					lw $10 12($sp)		#idem
+					lw $11 16($sp)		#idem
+					addu $sp $sp 20		#on désalloue l'espace sur la pile
 					jr $31						#on retourne dans le corps du programme
 			blanc:
 					li $2 -1
 					lw $31 ($sp)			#on met l'adresse de retour dans $31
-					addu $sp $sp 4		#on désalloue l'espace sur la pile
+					lw $8 4($sp)
+					lw $9 8($sp)
+					lw $10 12($sp)
+					lw $11 16($sp)
+					addu $sp $sp 20		#on désalloue l'espace sur la pile
 					jr $31						#on retourne dans le corps du programme
 			
 
@@ -199,8 +227,8 @@ quit:					.asciiz "quit"
 			couleur:
 					addi $sp $sp -4		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
-					lw $8 4($sp)
-					lw $9 8($sp)
+					lw $8 8($sp)
+					lw $9 12($sp)
 					addi $sp $sp -8
 					sw $8 4($sp)
 					sw $9 0($sp)
@@ -229,83 +257,127 @@ quit:					.asciiz "quit"
 					jr $31
 
 			occuper:
+#Pas d'argument 
+#pas de retour
 
 			affichage:
-					addi $sp $sp -32	#On augment la pile pour contenir l'adresse de retour de la fonction
+					addi $sp $sp -32	#On augment la pile pour contenir l'adresse de retour de la fonction et le contexte de la fonction appellante
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
-					sw $8 4($sp)
-					sw $9 8($sp)
-					sw $10 12($sp)
-					sw $11 16($sp)
-					sw $12 20($sp)
-					sw $13 24($sp)
-					sw $14 28($sp)
+					sw $8 4($sp)			#On sauvegarde les registre que l'on va utiliser
+					sw $9 8($sp)			#idem
+					sw $10 12($sp)		#idem
+					sw $11 16($sp)		#idem
+					sw $12 20($sp)		#idem
+					sw $13 24($sp)		#idem
+					sw $14 28($sp)		#idem
 					
 					la $10 damier			#On charge l'adresse damier dans $10 
-					li $8 0						#Intervalle superieur pour la boucle forAffi
-					li $9 0						#Intervalle inferieur pour la boucle forAffi
-					li $15 10
+					li $8 0						#Iterateur pour les ligne
+					li $9 0						#Iterateur pour les colonne
+					li $15 10					#Nombre de case par ligne et colonne
 					li $12 -1					#Valeur d'une case vide
 					li $13 1					#Valeur d'un pion blanc
 					li $14 2					#Valeur d'un pion noir
-					jal forAffi
+					
+					addi $sp $sp -4   #on sauvegarde l'adresse de retour
+					sw $31 0($sp)
+					jal forAffi				#On appelle la fonction d'affichage
+					sw $31 0($sp)
+					addi $sp $sp 4
+
 					lw $31 0($sp)			#On restore le retour de la fonction
-					lw $8 4($sp)
-					lw $9 8($sp)
-					lw $10 12($sp)
-					lw $11 16($sp)
-					lw $12 20($sp)
-					lw $13 24($sp)
-					lw $14 28($sp)
-					addi $sp $sp 32
+					lw $8 4($sp)			#On restaure les registre qu'on a utiliser
+					lw $9 8($sp)			#idem
+					lw $10 12($sp)		#idem
+					lw $11 16($sp)		#idem
+					lw $12 20($sp)		#idem
+					lw $13 24($sp)		#idem
+					lw $14 28($sp)		#idem
+					addi $sp $sp 32		#On decremente la pile 
 					jr $31							#On retourne dans le main
 			
 			forAffi:
-					bne $8 $15 parcColonne
+					bne $8 $15 parcColonne	#for numero de ligne != numero ligne max -> afficher colonne par colonne
 					jr $31
 			
 			parcColonne:
-					bne $9 $15 suivantAffi
-					li $9 0
-					addi $8 $8 1
+					bne $9 $15 suivantAffi	#for numero de colonne  != numero colonne max -> afficher l'element
+					li $9 0								#Si on arrive a la dernier colonne on remet le compteur a 0 pour la (possible ) ligne  suivante
+					addi $8 $8 1					#incremente l'indice d ligne ,on veut passer a la suivante
+					
+					addiu $sp $sp -8
+					sw $31 0($sp)
 					la $5 newline
-					jal afficher_string
-					j forAffi
+					sw $5 4($sp)
+					jal afficher_string 	#on veut afficher un retour a la ligne,apelle de la fonction d'affichage d'un string
+					lw $31 0($sp)
+					lw $5 4($sp)
+					addiu $sp $sp 8
+
+					j forAffi							#On repart au teste sur les lignes
 
 			suivantAffi:
-					addiu $sp $sp -8
-					sw $9 0($sp)
+					addiu $sp $sp -12
+					sw $31 0($sp)					
 					sw $8 4($sp)
-					jal get_case
-					lw $9 0($sp)
+					sw $9 8($sp)
+					jal get_case				#Appelle a get_case avec comme argument les iterateurs sur les ligne et colonne ($8 $9) 
+					lw $31 0($sp)					
 					lw $8 4($sp)
-					addi $9 $9 1 
-					addiu $sp $sp 8
-					beq $2 $12 affiBlanc
-					lb $11 0($2)
-					beq $11 $13 affiPionBlanc
-					beq $11 $14 affiPionNoir
-					beq $11 $0 affiNoir
+					lw $9 8($sp)
+					addiu $sp $sp 12
+					
+					addi $9 $9 1 					#incremente le compteur sur les colonne,onveut la colonne suivante
+					beq $2 $12 affiBlanc 	#Si la valeur de la case obtenu est -1 on affiche une case blanche
+					lb $11 0($2)					#Sinon on charge la valeur contenu dans l'adresse renvoyer par get_case
+					beq $11 $13 affiPionBlanc #si valeur = pion blanc on affiche un pion blanc
+					beq $11 $14 affiPionNoir	#ect ...
+					beq $11 $0 affiNoir				#ect ...
 					
 
 			affiBlanc:
+				addiu $sp $sp -8
+				sw $31 0($sp)
 				la $5 Blanc
-				jal afficher_string
+				sw $5 4($sp)
+				jal afficher_string  	#appelle a la fonction afficher_string pour afficher une case blanche
+				lw $31 0($sp)
+				lw $5 4($sp)
+				addiu $sp $sp 8
+
 				j parcColonne
 
 			affiNoir:
+				addiu $sp $sp -8
+				sw $31 0($sp)
 				la $5 Noir
-				jal afficher_string
+				sw $5 4($sp)
+				jal afficher_string		#appelle a la fonction afficher_string pour afficher une case noir
+				lw $31 0($sp)
+				lw $5 4($sp)
+				addiu $sp $sp 8
 				j parcColonne
 
 			affiPionNoir:
+				addiu $sp $sp -8
+				sw $31 0($sp)
 				la $5 PionNoir
-				jal afficher_string
+				sw $5 4($sp)
+				jal afficher_string		#appelle a la fonction afficher_string pour afficher un pion noir
+				lw $31 0($sp)
+				lw $5 4($sp)
+				addiu $sp $sp 8
 				j parcColonne
 
 			affiPionBlanc:
+				addiu $sp $sp -8
+				sw $31 0($sp)
 				la $5	PionBlanc
-				jal afficher_string
+				sw $5 4($sp)
+				jal afficher_string		#appelle a la fonction afficher_string pour afficher un pion blanc	
+				lw $31 0($sp)
+				lw $5 4($sp)
+				addiu $sp $sp 8
 				j parcColonne
 
 			
@@ -322,16 +394,17 @@ quit:					.asciiz "quit"
 			#fonction d'affichage, et sous-routines--------------------------
 
 			afficher_string:
+					lw $4 4($sp)			#on charge l'argument depuis la pile		
+
 					addi $sp $sp -8		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
-					sw $4 4($sp)
-					move $4 $5				#On prend l'adresse contenu dan $5 passe en argument 
+					sw $4 4($sp) 
 					li $2 4						#on met le bon numero d'appel system 
 					syscall						#On affiche la chaine dont l'adress est passe en argument
 					lw $31 0($sp)			#On restore le retour de la fonction
-					lw $4 4($sp)
-					addi $sp $sp 8		#On augment la pile pour contenir l'adresse de retour de la fonction
-					jr $31							#On retourne dans le main
+					lw $4 4($sp)			# on restaure l'argument
+					addi $sp $sp 8		#On decremente la pile 
+					jr $31						#On retourne dans la fonction appellante
 			
 
 			saisie:
