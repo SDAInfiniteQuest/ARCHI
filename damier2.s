@@ -28,11 +28,21 @@ quit:					.asciiz "quit"
 
 			#initialisation du damier
 			jal init_damier
-			li $4 6
-			li $5 5
-			jal couleur			#appel de la fonction couleur
-			li $4 37
+			li $8 6
+			li $9 5
+			addi $sp $sp -8 		#allocation de l'espace sur la pile pour les arguments
+			sw $9 0($sp)
+			sw $8 4($sp)
+			jal get_case			#appel de la fonction couleur
+			lw $9 4($sp)
+			lw $8 8($sp)
+			addi $sp $sp 8
+			li $8 37
+			addu $sp $sp -4
+			sw $8 ($sp)
 			jal colonne			#appel de la fonction ligne
+			lw $8 ($sp)
+			addu $sp $sp 4
 			jal affichage
 			#Debut boucle saisie
 			#on sort de la boucle lorsque l'utilisateur rentre la commande "quit"
@@ -54,15 +64,15 @@ quit:					.asciiz "quit"
 					li $11 1					#La valeur que va prendre les element du damier entreintervalle sup et inf 
 					jal forInit				#la boucle qui va mettre les 20 premiere case avec des pionsnoir (1)
 					li $8 30					#Idem
-					li $9 21
+					li $9 20
 					li $11 0
 					jal forInit				#La boucle qui va mettre les case entre entre les deux joueur a vide (0)
 					li $8 50					#Idem
-					li $9 31 
+					li $9 30 
 					li $11 2
 					jal forInit				#La boucle qui va mettre les 20 derniere case avec des pions blanc (2)
 					lw $31 0($sp)			#On restore le retour de la fonction
-
+					addi $sp $sp 4		#on désalloue l'espace sur la pile
 					jr $31							#On retourne dans le main
 
 			forInit:
@@ -98,11 +108,13 @@ quit:					.asciiz "quit"
 					addi $sp $sp 4		#on désalloue l'espace alloué sur le pile
 					jr $31
 
+			#FONCTION colonne: prend une case et renvoie une colonne
 			colonne:
 					addu $sp $sp -4 	#on décrémente la pile pour mettre l'adresse de retour
 					sw $31 ($sp)			#on stocke l'adresse de retour
+					lw $8 4($sp)
 					li $10 5					#Valeur du diviseur
-					div $4 $10				#division de l'argument $4 avec 5 ($10)
+					div $8 $10				#division de l'argument $4 avec 5 ($10)
 					mflo $2						#On met le resultat de $4/$10 dans la valeur de retour
 					mfhi $11					#On met le resultat de $4 mod $10 dans $11
 					li $9 2						#On met 2 dans $9
@@ -129,16 +141,15 @@ quit:					.asciiz "quit"
 			get_case:
 					addu $sp $sp -4 	#on décrémente la pile pour mettre l'adresse de retour
 					sw $31 ($sp)			#on stocke l'adresse de retour
-					la $8 ($5)			#on charge l'adresse du premier agument de la	pile
-					la $9 ($4)			#on charge l'adresse du deuxième agument de la	pile
+					lw $9 4($sp)			#on charge l'adresse du premier agument de la	pile
+					lw $8 8($sp)			#on charge l'adresse du deuxième agument de la	pile
 					addu $10 $8 $9		#on additionne j ($8) et i($9)
 					li $11 2					#on charge 2 dans $11
 					div $10 $11				#on divise i+j par 2
 					mfhi $11					#on prend le reste
 					beq $11 $0 blanc 
 					li $10 5					#on met 5 dans $10
-					mult $10 $9				#on multiplie i par 5
-					mflo $10					#on récupère le résultat dans $10
+					mul $10 $10 $9				#on multiplie i par 5
 					addu $10 $8 $10		#on additionne avec j
 					la $11 damier			#on charge l'adresse du damier dans le registre $11
 					add $11 $11 $10		#on ajoute à l'adresse le décalage pour avoir	l'adresse de la case
@@ -151,6 +162,41 @@ quit:					.asciiz "quit"
 					lw $31 ($sp)			#on met l'adresse de retour dans $31
 					addu $sp $sp 4		#on désalloue l'espace sur la pile
 					jr $31						#on retourne dans le corps du programme
+			
+
+			#FONCTION: prend deux couples a=(x,y) et b=(z,t), a=adresse de la case de départ (doit contenir un pion), b=adresse de la case d'arrivée
+			move_pion_possible:
+					addi $sp $sp -4		#On augment la pile pour contenir l'adresse de retour de la fonction
+					sw $31 0($sp)		#On met l'adresse de retour de la fonction dans la pile
+					la $8 ($4)			#on met les arguments dans les registre 8 à 11
+					la $9 ($5)	
+					la $10 ($6)	
+					la $11 ($7)	
+					la $12 damier			#on stocke l'adresse de damier dans $12
+					jal get_case			#appel à get_case
+					la $13 ($2) 			#récupérer l'adresse de la case
+					la $4 ($10)			#on met les arguments de la fonction get_case dans $4 $5
+					la $5 ($11)	
+					jal get_case			#nouvel appel à get_case
+					la $14 ($2) 			#récupérer l'adresse de la case
+					blt $13 $0 fin			#on saute à la fin de la fonction si la case est blanche
+					blt $14 $0 fin			#on saute à la fin de la fonction si la case est blanche	
+					lb $15 ($13)			#on charge la valeur contenue dans la case départ
+					beq $15 $0 fin		#on saute à la finh de la fonction si la case est inoccupée				
+					li $16 1			#on charge 1 dans  $16
+					beq $15 $16 cas_pion_blanc # on détermine la couleur du pion
+					j cas_pion_noir
+
+			cas_pion_blanc:
+					bge $8 $9 fin			#on saute à la fin de la fonction si la case de départ est plus avancée que la case d'arrivée
+					
+			cas_pion_noir:
+					bge $9 $8 fin		#on saute à la fin de la fonction si la case de départ est plus avancée que la case d'arrivée
+
+			fin:
+					lw $31 0($sp)			#On restore le retour de la fonction
+					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
+					jr $31
 
 			move_pion:
 			
@@ -158,7 +204,15 @@ quit:					.asciiz "quit"
 			couleur:
 					addi $sp $sp -4		#On augment la pile pour contenir l'adresse de retour de la fonction
 					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
+					lw $8 4($sp)
+					lw $9 8($sp)
+					addi $sp $sp -8
+					sw $8 4($sp)
+					sw $9 0($sp)
 					jal get_case			#Appel à la fonction get_case
+					lw $8 4($sp)
+					lw $9 0($sp)
+					addi $sp $sp 8
 					la $8 ($2)			#On met le résultat de la fonction dans $8
 					blt $8 $0 couleurBlanc 	#branchement si $2 < 0
 					j couleurNoire
