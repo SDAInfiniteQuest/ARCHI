@@ -300,7 +300,7 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 					bne $17 $10 cas_droite_blanc #on fait le cas droite si i+2≠x
 					bne $18 $10 cas_droite_blanc #on fait le cas droite si j-2≠y
 
-					li $2 1				# le mouvement est possible on renvoie 1
+					li $2 2				# le mouvement est possible on renvoie 1
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
@@ -327,7 +327,7 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 					bne $17 $10 fin 		#on fait le cas droite si i+1≠x
 					bne $18 $10 fin 		#on fait le cas droite si j+1≠y
 
-					li $2 1				# le mouvement est possible on renvoie 1					
+					li $2 3				# le mouvement est possible on renvoie 1					
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
@@ -354,7 +354,7 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 					bne $17 $10 fin		 #on fait le cas droite si i+2≠x
 					bne $18 $10 fin		 #on fait le cas droite si j+2≠y
 
-					li $2 1				# le mouvement est possible on renvoie 1
+					li $2 4				# le mouvement est possible on renvoie 1
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
@@ -384,7 +384,7 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 					bne $17 $10 cas_droite_noir #on fait le cas droite si i-1≠x
 					bne $18 $10 cas_droite_noir #on fait le cas droite si j-1≠y
 
-					li $2 1
+					li $2 5
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
@@ -411,7 +411,7 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 					bne $17 $10 cas_droite_noir #on fait le cas droite si i-2≠x
 					bne $18 $10 cas_droite_noir #on fait le cas droite si j-2≠y
 
-					li $2 1				# le mouvement est possible on renvoie 1
+					li $2 6				# le mouvement est possible on renvoie 1
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
@@ -438,7 +438,7 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 					bne $17 $10 fin		#on fait le cas droite si i+1≠x
 					bne $18 $10 fin		#on fait le cas droite si j-1≠y
 
-					li $2 1				# le mouvement est possible on renvoie 1
+					li $2 7				# le mouvement est possible on renvoie 1
 					lw $31 0($sp)			#On restaure le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
@@ -465,7 +465,7 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 					bne $17 $10 fin		 #on fait le cas droite si i+2≠x
 					bne $18 $10 fin		 #on fait le cas droite si j+2≠y
 
-					li $2 1				# le mouvement est possible on renvoie 1
+					li $2 8				# le mouvement est possible on renvoie 1
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
@@ -476,12 +476,153 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
 
+			#FONCTION: move_pion prend en entrée les coordonnées de deux case et execute le déplacement de la case de départ à la case d'arrivée
 			move_pion:
+					addu $sp $sp -4		#on met l'adresse de retour sur la pile
+					sw $31 ($sp)
+
+					lw $8 4($sp)			# $8 ← i
+					lw $9 8($sp)			# $9 ← j
+					lw $10 12($sp)		# $10 ← x
+					lw $11 16($sp)		# $11 ← y
+
+					addu $sp $sp -16		
+					sw $8 0($sp)			
+					sw $9 4($sp)			
+					sw $10 8($sp)		
+					sw $11 12($sp)		
+					jal move_pion_possible 	#appel à la fonction move_pion_possible
+					lw $8 0($sp)			
+					lw $9 4($sp)			
+					lw $10 8($sp)		
+					lw $11 12($sp)
+					addu $sp $sp 16		
+
+					la $16 ($2)
+					beq $16 $0 fin_move   	#si le mouvement est impossible on saute à la fin de la fonction move_pion
+					
+					addu $sp $sp -8
+					sw $8 0($sp)			
+					sw $9 4($sp)	
+					jal get_case			# appel a getcase pour récupérer la case départ
+					lw $8 0($sp)			
+					lw $9 4($sp)	
+					addu $sp $sp 8
+					la $12 ($2)			# $12←adresse (i,j)
+					lb $14 ($12)			#on récupère la valeur contenue dans la case de départ
+
+					addu $sp $sp -8
+					sw $10 0($sp)			
+					sw $11 4($sp)	
+					jal get_case			# second appel a getcase pour récupérer la case d'arrivée
+					lw $10 0($sp)			
+					lw $11 4($sp)	
+					addu $sp $sp 8
+					la $13 ($2)			# $13←adresse (x,y)	
+
+					li $18 1
+					beq $18 $16 cas_1
+					addi $18 $18 1
+					beq $18 $16 cas_2
+					addi $18 $18 1
+					beq $18 $16 cas_1
+					addi $18 $18 1
+					beq $18 $16 cas_3
+					addi $18 $18 1
+					beq $18 $16 cas_1
+					addi $18 $18 1
+					beq $18 $16 cas_4
+					addi $18 $18 1
+					beq $18 $16 cas_1
+					addi $18 $18 1
+					beq $18 $16 cas_5
+
+			cas_1:
+					sb $14 ($13)
+					sb $0 ($12)
+					j fin_move
+
+			cas_2:
+					sb $14 ($13)
+					sb $0 ($12)
+					addi $20 $8 1	
+					addi $21 $9 -1
+
+					addu $sp $sp -8
+					sw $20 0($sp)			
+					sw $21 4($sp)	
+					jal get_case			# appel a getcase
+					lw $20 0($sp)			
+					lw $21 4($sp)	
+					addu $sp $sp 8
+					la $23 ($2)			# $23←adresse (i+1,j-1)		
+					lb $0 ($23)			# on met 0 a cette adresse
+
+					j fin_move					
+
+			cas_3:
+					sb $14 ($13)
+					sb $0 ($12)
+					addi $20 $8 1	
+					addi $21 $9 1
+
+					addu $sp $sp -8
+					sw $20 0($sp)			
+					sw $21 4($sp)	
+					jal get_case			# appel a getcase
+					lw $20 0($sp)			
+					lw $21 4($sp)	
+					addu $sp $sp 8
+					la $23 ($2)			# $23←adresse (i+1,j+1)		
+					lb $0 ($23)			# on met 0 a cette adresse
+
+					j fin_move
+
+			cas_4:
+					sb $14 ($13)
+					sb $0 ($12)
+					addi $20 $8 -1	
+					addi $21 $9 -1
+
+					addu $sp $sp -8
+					sw $20 0($sp)			
+					sw $21 4($sp)	
+					jal get_case			# appel a getcase
+					lw $20 0($sp)			
+					lw $21 4($sp)	
+					addu $sp $sp 8
+					la $23 ($2)			# $23←adresse (i-1,j-1)		
+					lb $0 ($23)			# on met 0 a cette adresse
+
+					j fin_move
+
+			cas_5:
+					sb $14 ($13)
+					sb $0 ($12)
+					addi $20 $8 -1	
+					addi $21 $9 1
+
+					addu $sp $sp -8
+					sw $20 0($sp)			
+					sw $21 4($sp)	
+					jal get_case			#  appel a getcase 
+					lw $20 0($sp)			
+					lw $21 4($sp)	
+					addu $sp $sp 8	
+					la $23 ($2)			# $23←adresse (i-1,j+1)		
+					lb $0 ($23)			# on met 0 a cette adresse
+
+					j fin_move
+
+			fin_move:
+					lw $31 0($sp)			#On restore le retour de la fonction
+					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
+					jr $31
 			
 			#argument $4 $5 (x,y)
 			couleur:
 					addi $sp $sp -4		#On augment la pile pour contenir l'adresse de retour de la fonction
-					sw $31 0($sp)			#On met l'adresse de retour de la fonction dans la pile
+					sw $31 0($sp)		#On met l'adresse de retour de la fonction dans la pile
 					lw $8 8($sp)
 					lw $9 12($sp)
 					addi $sp $sp -8
