@@ -243,6 +243,7 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 
 					li $21 1			#on charge 1 dans  $21
 					li $22 2			#on charge 2 dans  $22
+					li $23 10			#limite du damier
 
 					beq $15 $21 cas_pion_blanc # on détermine la couleur du pion
 					j cas_pion_noir
@@ -252,7 +253,10 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 			
 			cas_gauche_blanc:
 					addi $17 $8 1			# $17 ← i+1
-					addi $18 $9 -1		# $17 ← j-1
+					addi $18 $9 -1		# $18 ← j-1
+					
+					beq $23 $17 fin 		#si on atteint le bord sud du damier on saute à la fin et aucun mouvement n'est possible
+					blt $18 $0 cas_droite_blanc	#si on a atteint le bord gauche au saute au cas suivant 
 
 					addu $sp $sp -8		# appel get_case avec i+1 j-1
 					sw $17 0($sp)
@@ -261,20 +265,52 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 					lw $17 0($sp)
 					lw $18 4($sp)
 					addu $sp $sp 8
-					lb $17 ($2)			# on charge la valeur à l'adresse get_case(i+1,j-1)
+					lb $19 ($2)			# on charge la valeur à l'adresse get_case(i+1,j-1)
 
-					beq $17 $21 cas_droite_blanc
-					beq $17 $22 prendre_gauche_blanc
+					beq $19 $21 cas_droite_blanc
+					beq $19 $22 prendre_gauche_blanc
 
+					bne $17 $10 cas_droite_blanc #on fait le cas droite si i+1≠x
+					bne $18 $10 cas_droite_blanc #on fait le cas droite si j-1≠y
+					
+					li $2 1				# le mouvement est possible on renvoie 1
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
 
 			prendre_gauche_blanc:
+					addi $17 $8 2			# $17 ← i+2
+					addi $18 $9 -2		# $18 ← j-2
+					
+					beq $23 $17 fin 		#si on atteint le bord sud du damier on saute à la fin et aucun mouvement n'est possible
+					blt $18 $0 fin			#si on a atteint le bord gauche au saute a la fin
+
+					addu $sp $sp -8		# appel get_case avec i+2 j-2
+					sw $17 0($sp)
+					sw $18 4($sp)
+					jal get_case
+					lw $17 0($sp)
+					lw $18 4($sp)
+					addu $sp $sp 8
+					lb $19 ($2)			# on charge la valeur à l'adresse get_case(i+2,j-2)
+					
+					beq $19 $22 fin 		# s'il y a un pion à la case i+2 j+2 on saute a la fin
+					beq $19 $21 fin
+					
+					bne $17 $10 cas_droite_blanc #on fait le cas droite si i+2≠x
+					bne $18 $10 cas_droite_blanc #on fait le cas droite si j-2≠y
+
+					li $2 1				# le mouvement est possible on renvoie 1
+					lw $31 0($sp)			#On restore le retour de la fonction
+					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
+					jr $31
 
 			cas_droite_blanc:
 					addi $17 $8 1			# $17 ← i+1
-					addi $18 $9 1			# $17 ← j+1
+					addi $18 $9 1			# $18 ← j+1
+					
+					beq $23 $17 fin 		#si on atteint le bord sud du damier on saute à la fin et aucun mouvement n'est possible
+					beq $23 $18 fin		#si on a atteint le bord droit au saute a la fin
 
 					addu $sp $sp -8		# appel get_case avec i+1 j+1
 					sw $17 0($sp)
@@ -283,42 +319,109 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 					lw $17 0($sp)
 					lw $18 4($sp)
 					addu $sp $sp 8
-					lb $17 ($2)			# on charge la valeur à l'adresse get_case(i+1,j+1)
+					lb $19 ($2)			# on charge la valeur à l'adresse get_case(i+1,j+1)
 
-					beq $17 $21 fin		# le pion est bloqué aucun mouvement n'est possible
-					beq $17 $22 prendre_droite_blanc
+					beq $19 $21 fin		# le pion est bloqué aucun mouvement n'est possible
+					beq $19 $22 prendre_droite_blanc
 
+					bne $17 $10 fin 		#on fait le cas droite si i+1≠x
+					bne $18 $10 fin 		#on fait le cas droite si j+1≠y
+
+					li $2 1				# le mouvement est possible on renvoie 1					
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
 
 			prendre_droite_blanc:
+					addi $17 $8 2			# $17 ← i+2
+					addi $18 $9 2			# $18 ← j+2
+					
+					beq $23 $17 fin 		#si on atteint le bord sud du damier on saute à la fin et aucun mouvement n'est possible
+					beq $23 $18 fin		#si on a atteint le bord gauche au saute a la fin
 
-			cas_pion_noir:
-					j cas_gauche_noir
-
-			cas_gauche_noir:
-					addi $17 $8 -1		# $17 ← i-1
-					addi $18 $9 -1		# $17 ← j-1
-
-					addu $sp $sp -8		# appel get_case avec i+1 j-1
+					addu $sp $sp -8		# appel get_case avec i+2 j-2
 					sw $17 0($sp)
 					sw $18 4($sp)
 					jal get_case
 					lw $17 0($sp)
 					lw $18 4($sp)
 					addu $sp $sp 8
-					lb $17 ($2)			# on charge la valeur à l'adresse get_case(i+1,j-1)
+					lb $19 ($2)			# on charge la valeur à l'adresse get_case(i+2,j+2)
+					
+					beq $19 $22 fin 		# s'il y a un pion à la case i+2 j+2 on saute a la fin
+					beq $19 $21 fin
+					
+					bne $17 $10 fin		 #on fait le cas droite si i+2≠x
+					bne $18 $10 fin		 #on fait le cas droite si j+2≠y
 
-					beq $17 $22 cas_droite_noir
+					li $2 1				# le mouvement est possible on renvoie 1
+					lw $31 0($sp)			#On restore le retour de la fonction
+					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
+					jr $31
 
+			cas_pion_noir:
+					j cas_gauche_noir
+
+			cas_gauche_noir:
+					addi $17 $8 -1		# $17 ← i-1
+					addi $18 $9 -1		# $18 ← j-1
+					
+					blt $17 $0 fin	 		#si on atteint le bord sud du damier on saute à la fin et aucun mouvement n'est possible
+					blt $18 $0 cas_droite_noir	#si on a atteint le bord gauche au saute au cas suivant 
+
+					addu $sp $sp -8		# appel get_case avec i-1 j-1
+					sw $17 0($sp)
+					sw $18 4($sp)
+					jal get_case
+					lw $17 0($sp)
+					lw $18 4($sp)
+					addu $sp $sp 8
+					lb $19 ($2)			# on charge la valeur à l'adresse get_case(i-1,j-1)
+
+					beq $19 $22 cas_droite_noir
+					beq $19 $21 prendre_gauche_noir
+
+					bne $17 $10 cas_droite_noir #on fait le cas droite si i-1≠x
+					bne $18 $10 cas_droite_noir #on fait le cas droite si j-1≠y
+
+					li $2 1
+					lw $31 0($sp)			#On restore le retour de la fonction
+					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
+					jr $31
+
+			prendre_gauche_noir:
+					addi $17 $8 -2		# $17 ← i-2
+					addi $18 $9 -2		# $18 ← j-2
+					
+					blt $17 $0 fin	 		#si on atteint le bord nord du damier on saute à la fin et aucun mouvement n'est possible
+					blt $18 $0 fin			#si on a atteint le bord gauche au saute a la fin
+
+					addu $sp $sp -8		# appel get_case avec i-2 j-2
+					sw $17 0($sp)
+					sw $18 4($sp)
+					jal get_case
+					lw $17 0($sp)
+					lw $18 4($sp)
+					addu $sp $sp 8
+					lb $19 ($2)			# on charge la valeur à l'adresse get_case(i-2,j-2)
+					
+					beq $19 $22 cas_droite_noir # s'il y a un pion à la case i+2 j+2 on saute a la fin
+					beq $19 $21 cas_droite_noir
+					
+					bne $17 $10 cas_droite_noir #on fait le cas droite si i-2≠x
+					bne $18 $10 cas_droite_noir #on fait le cas droite si j-2≠y
+
+					li $2 1				# le mouvement est possible on renvoie 1
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
 
 			cas_droite_noir:
-					addi $17 $8 1			# $17 ← i-1
-					addi $18 $9 1			# $17 ← j+1
+					addi $17 $8 -1		# $17 ← i-1
+					addi $18 $9 1			# $18 ← j+1
+					
+					blt $17 $0 fin 			#si on atteint le bord nord du damier on saute à la fin et aucun mouvement n'est possible
+					beq $18 $23 fin		#si on a atteint le bord gauche au saute a la fin
 
 					addu $sp $sp -8		# appel get_case avec i-1 j+1
 					sw $17 0($sp)
@@ -327,14 +430,48 @@ choix4:.asciiz "Pour deplacer un pion, entre deplacement\n"
 					lw $17 0($sp)
 					lw $18 4($sp)
 					addu $sp $sp 8
-					lb $17 ($2)			# on charge la valeur à l'adresse get_case(i-1,j+1)
+					lb $19 ($2)			# on charge la valeur à l'adresse get_case(i-1,j+1)
 
-					beq $17 $22 fin		# le pion est bloqué aucun mouvement n'est possible
+					beq $19 $21 prendre_droite_noir # on saute vers prendre_droite_noir
+					beq $19 $22 fin		# le pion est bloqué aucun mouvement n'est possible
 
+					bne $17 $10 fin		#on fait le cas droite si i+1≠x
+					bne $18 $10 fin		#on fait le cas droite si j-1≠y
+
+					li $2 1				# le mouvement est possible on renvoie 1
+					lw $31 0($sp)			#On restaure le retour de la fonction
+					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
+					jr $31
+
+			prendre_droite_noir:
+					addi $17 $8 -2		# $17 ← i-2
+					addi $18 $9 2			# $18 ← j+2
+					
+					blt $17 $0 fin 			#si on atteint le bord nord du damier on saute à la fin et aucun mouvement n'est possible
+					beq $23 $18 fin		#si on a atteint le bord gauche au saute a la fin
+
+					addu $sp $sp -8		# appel get_case avec i+2 j-2
+					sw $17 0($sp)
+					sw $18 4($sp)
+					jal get_case
+					lw $17 0($sp)
+					lw $18 4($sp)
+					addu $sp $sp 8
+					lb $19 ($2)			# on charge la valeur à l'adresse get_case(i-2,j+2)
+					
+					beq $19 $22 fin 		# s'il y a un pion à la case i-2 j+2 on saute a la fin
+					beq $19 $21 fin
+					
+					bne $17 $10 fin		 #on fait le cas droite si i+2≠x
+					bne $18 $10 fin		 #on fait le cas droite si j+2≠y
+
+					li $2 1				# le mouvement est possible on renvoie 1
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
+
 			fin:
+					li $2 0				#la fonction renvoie 0 car aucun mouvement n'est possible
 					lw $31 0($sp)			#On restore le retour de la fonction
 					addi $sp $sp -4		#On désalloue l'espace de l'adresse de retour sur la pile
 					jr $31
